@@ -36,8 +36,6 @@ func init() {
 	flowCmd.AddCommand(flowAddCmd, flowUpdateCmd, flowDeleteCmd)
 
 	flowAddCmd.Flags().StringP("name", "n", "", "Name of the command flow.")
-	flowAddCmd.Flags().BoolP("validate", "v", false, "Validate the command before store it in the flow.")
-	flowAddCmd.Flags().StringP("import", "i", "", "Import commands from a file.")
 	flowAddCmd.Flags().StringArrayP("commands", "c", []string{}, "Commands to execute.")
 	flowAddCmd.Flags().BoolP("parallel", "p", false, "Set execution to be in parallel.")
 	flowAddCmd.Flags().BoolP("serial", "s", true, "Set execution to be serial.")
@@ -49,8 +47,6 @@ func init() {
 
 	flowUpdateCmd.Flags().StringP("flow", "f", "", "Name of the  flow to update")
 	flowUpdateCmd.Flags().StringP("name", "n", "", "New name of the command flow.")
-	flowUpdateCmd.Flags().BoolP("validate", "v", false, "Validate the command before store it in the flow.")
-	flowUpdateCmd.Flags().StringP("import", "i", "", "Import commands from a file.")
 	flowUpdateCmd.Flags().StringArrayP("commands", "c", []string{}, "Commands to execute.")
 	flowUpdateCmd.Flags().BoolP("parallel", "p", false, "Set execution to be in parallel.")
 	flowUpdateCmd.Flags().BoolP("serial", "s", true, "Set execution to be serial.")
@@ -63,8 +59,6 @@ func flowAdd(cmd *cobra.Command, args []string) {
 	var newFlow pkg.Flow
 
 	newFlow.Name, _ = cmd.Flags().GetString("name")
-	newFlow.Validate, _ = cmd.Flags().GetBool("validate")
-	newFlow.Import, _ = cmd.Flags().GetString("import")
 	newFlow.Commands, _ = cmd.Flags().GetStringArray("commands")
 	newFlow.Parallel, _ = cmd.Flags().GetBool("parallel")
 	newFlow.Serial, _ = cmd.Flags().GetBool("serial")
@@ -78,8 +72,6 @@ func flowUpdate(cmd *cobra.Command, args []string) {
 	var flow pkg.Flow
 
 	flow.Name, _ = cmd.Flags().GetString("name")
-	flow.Validate, _ = cmd.Flags().GetBool("validate")
-	flow.Import, _ = cmd.Flags().GetString("import")
 	flow.Commands, _ = cmd.Flags().GetStringArray("commands")
 	flow.Parallel, _ = cmd.Flags().GetBool("parallel")
 	flow.Serial, _ = cmd.Flags().GetBool("serial")

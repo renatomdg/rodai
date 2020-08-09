@@ -16,6 +16,7 @@ var (
 	Teal   = Color("\033[1;36m%s\033[0m")
 	Yellow = Color("\033[1;33m%s\033[0m")
 	Purple = Color("\033[1;34m%s\033[0m")
+	White   = Color("\033[1;37m%s\033[0m")
 )
 
 func Color(colorString string) func(...interface{}) string {
@@ -35,7 +36,9 @@ func ColoredStatus(code int) string {
 	case 15:
 		return Yellow("\u2605")
 	case 16:
-		return Purple("\u2691")
+		return White("\u2672")
+	case 3012:
+		return Red("\u2717")
 	default:
 		return Teal("\u003f")
 	}

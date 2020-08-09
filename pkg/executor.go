@@ -10,7 +10,20 @@ import (
 	"time"
 )
 
+type ParallelFlowExec struct {
+	Command string
+	Name    string
+}
+
+type FlowCommandReturn struct {
+	Flow    string
+	Command string
+	Status  int
+	Output  string
+}
+
 func Executor(cmd *cobra.Command, args []string) {
+
 	flows := GetFlows(false)
 	var flowsList []string
 
@@ -33,18 +46,64 @@ func Executor(cmd *cobra.Command, args []string) {
 	selectedFlow, err := GetFlowParameters(result)
 	CheckErr(err)
 
-	RunFlowCommands(selectedFlow)
+	if selectedFlow.Parallel {
+		ParallelExecutor(selectedFlow)
+	} else if selectedFlow.Serial {
+		SerialExecutor(selectedFlow)
+	}
+}
+
+func ParallelExecutor(selectedFlow Flow) {
+
+	var outFile string
+
+	results := make(map[string]string)
+	flowChan := make(chan ParallelFlowExec)
+	resultsChan := make(chan FlowCommandReturn)
+
+	for i := 0; i <= len(selectedFlow.Commands); i++ {
+		go RunFlowCommandsParallel(flowChan, resultsChan)
+	}
+
+	for _, command := range selectedFlow.Commands {
+		fmt.Println(ColoredStatus(16), "Running command:", command)
+		flowChan <- ParallelFlowExec{
+			Command: command,
+			Name:    selectedFlow.Name,
+		}
+	}
+
+	breakExecIn := len(selectedFlow.Commands)
+	currentExec := 0
+	for {
+		if currentExec == breakExecIn {
+			break
+		}
+
+		select {
+		case res := <-resultsChan:
+			fmt.Println("Running command:", res.Command, ColoredStatus(res.Status))
+			results[res.Command] = res.Output
+			currentExec++
+		default:
+		}
+	}
+
+	outFile = GenerateFileName(selectedFlow.Name)
+	for command, output := range results {
+		WriteInFile(outFile, "Command: "+command)
+		WriteInFile(outFile, output)
+	}
+
+	fmt.Printf(ColoredStatus(15) + " Commands stdout/err stored in ~/.config/rodai/runs/%s", outFile)
 
 }
 
-func RunFlowCommands(flow Flow) {
-
+func SerialExecutor(selectedFlow Flow) {
 	results := make(map[string]string)
 	var outFile string
 
-
-	fmt.Print("\033[H\033[2J")
-	for _, command := range flow.Commands {
+	for _, command := range selectedFlow.Commands {
 		values := strings.Split(command, " ")
 		bin := values[0]
 		args := values[1:]
@@ -58,12 +117,30 @@ func RunFlowCommands(flow Flow) {
 		s.Stop()
 	}
 
-	outFile = GenerateFileName(flow.Name)
+	outFile = GenerateFileName(selectedFlow.Name)
 	for command, output := range results {
 		WriteInFile(outFile, "Command: "+command)
 		WriteInFile(outFile, output)
 	}
 	fmt.Printf(ColoredStatus(15) + " Commands stdout/err stored in ~/.config/rodai/runs/%s", outFile)
+}
+
+func RunFlowCommandsParallel(flowChan <-chan ParallelFlowExec, results chan<- FlowCommandReturn) {
+
+	for flow := range flowChan {
+
+		values := strings.Split(flow.Command, " ")
+		bin := values[0]
+		args := values[1:]
+		out, status := ExecCommand(bin, strings.Join(args, " "))
+		execReturn := FlowCommandReturn{}
+		execReturn.Status = status
+		execReturn.Output = out
+		execReturn.Command = flow.Command
+		execReturn.Flow = flow.Name
+
+		results <- execReturn
+	}
 }
 
 func ExecCommand(command string, args ...string) (string, int) {
@@ -82,4 +159,3 @@ func ExecCommand(command string, args ...string) (string, int) {
 
 	return string(output), 3012
 }
-
