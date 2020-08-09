@@ -12,8 +12,6 @@ import (
 
 type Flow struct {
 	Name     string   `yaml:"Name"`
-	Validate bool     `yaml:"Validate"`
-	Import   string   `yaml:"Import"`
 	Parallel bool     `yaml:"Parallel"`
 	Serial   bool     `yaml:"Serial"`
 	Commands []string `yaml:"Commands"`
@@ -62,10 +60,8 @@ func UpdateFlow(flowName string, toUpdate Flow) (string, int) {
 			flow.Commands = toUpdate.Commands
 			flow.Serial = toUpdate.Serial
 			flow.Parallel = toUpdate.Parallel
-			flow.Validate = toUpdate.Validate
-			flow.Import = toUpdate.Import
 			AddFlow(flow)
-			return fmt.Sprintf("Success updating flow %s (now %s)", flowName, toUpdate.Name), 0
+			return fmt.Sprintf("Update flow %s (now %s)", flowName, toUpdate.Name), 0
 		}
 	}
 
@@ -78,7 +74,7 @@ func DeleteFlow(toDelete string) (string, int) {
 		if flow.Name == toDelete {
 			flows.Flows = append(flows.Flows[:i], flows.Flows[i+1:]...)
 			CommitFlow(flows)
-			return "Success deleting flow " + toDelete, 0
+			return "Deleting flow " + toDelete, 0
 		}
 	}
 	return "Failed deleting flow " + toDelete + " (Not found)", 1
