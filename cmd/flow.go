@@ -39,6 +39,8 @@ func init() {
 	flowAddCmd.Flags().StringArrayP("commands", "c", []string{}, "Commands to execute.")
 	flowAddCmd.Flags().BoolP("parallel", "p", false, "Set execution to be in parallel.")
 	flowAddCmd.Flags().BoolP("serial", "s", true, "Set execution to be serial.")
+	flowAddCmd.Flags().BoolP("use-bastion", "u", false, "Use a bastion to execute commands.")
+	flowAddCmd.Flags().StringP("bastion-name", "b", "", "Specify the bastion to run commands over.")
 	flowAddCmd.MarkFlagRequired("name")
 	flowAddCmd.MarkFlagRequired("commands")
 
@@ -50,20 +52,24 @@ func init() {
 	flowUpdateCmd.Flags().StringArrayP("commands", "c", []string{}, "Commands to execute.")
 	flowUpdateCmd.Flags().BoolP("parallel", "p", false, "Set execution to be in parallel.")
 	flowUpdateCmd.Flags().BoolP("serial", "s", true, "Set execution to be serial.")
+	flowUpdateCmd.Flags().BoolP("use-bastion", "u", false, "Use a bastion to execute commands.")
+	flowUpdateCmd.Flags().StringP("bastion-name", "b", "", "Specify the bastion to run commands over.")
 	flowUpdateCmd.MarkFlagRequired("flow")
 
 }
 
 func flowAdd(cmd *cobra.Command, args []string) {
 
-	var newFlow pkg.Flow
+	var flow pkg.Flow
 
-	newFlow.Name, _ = cmd.Flags().GetString("name")
-	newFlow.Commands, _ = cmd.Flags().GetStringArray("commands")
-	newFlow.Parallel, _ = cmd.Flags().GetBool("parallel")
-	newFlow.Serial, _ = cmd.Flags().GetBool("serial")
+	flow.Name, _ = cmd.Flags().GetString("name")
+	flow.Commands, _ = cmd.Flags().GetStringArray("commands")
+	flow.Parallel, _ = cmd.Flags().GetBool("parallel")
+	flow.Serial, _ = cmd.Flags().GetBool("serial")
+	flow.UseBastion, _ = cmd.Flags().GetBool("use-bastion")
+	flow.BastionName, _ = cmd.Flags().GetString("bastion-name")
 
-	result, code := pkg.AddFlow(newFlow)
+	result, code := pkg.AddFlow(flow)
 	fmt.Println(pkg.ColoredStatus(code), result)
 }
 
@@ -75,6 +81,8 @@ func flowUpdate(cmd *cobra.Command, args []string) {
 	flow.Commands, _ = cmd.Flags().GetStringArray("commands")
 	flow.Parallel, _ = cmd.Flags().GetBool("parallel")
 	flow.Serial, _ = cmd.Flags().GetBool("serial")
+	flow.UseBastion, _ = cmd.Flags().GetBool("use-bastion")
+	flow.BastionName, _ = cmd.Flags().GetString("bastion-name")
 	toUpdate, _ := cmd.Flags().GetString("flow")
 
 	result, code := pkg.UpdateFlow(toUpdate, flow)

@@ -13,6 +13,7 @@ import (
 type ParallelFlowExec struct {
 	Command string
 	Name    string
+	Bastion string
 }
 
 type FlowCommandReturn struct {
@@ -23,7 +24,6 @@ type FlowCommandReturn struct {
 }
 
 func Executor(cmd *cobra.Command, args []string) {
-
 	flows := GetFlows(false)
 	var flowsList []string
 
@@ -70,6 +70,7 @@ func ParallelExecutor(selectedFlow Flow) {
 		flowChan <- ParallelFlowExec{
 			Command: command,
 			Name:    selectedFlow.Name,
+			Bastion: selectedFlow.BastionName,
 		}
 	}
 
@@ -95,7 +96,7 @@ func ParallelExecutor(selectedFlow Flow) {
 		WriteInFile(outFile, output)
 	}
 
-	fmt.Printf(ColoredStatus(15) + " Commands stdout/err stored in ~/.config/rodai/runs/%s", outFile)
+	fmt.Printf(ColoredStatus(15)+" Commands stdout/err stored in ~/.config/rodai/runs/%s", outFile)
 
 }
 
@@ -111,7 +112,7 @@ func SerialExecutor(selectedFlow Flow) {
 		s.Suffix = fmt.Sprintf(" Running command: %s", command)
 		s.Color("cyan")
 		s.Start()
-		out, status := ExecCommand(bin, strings.Join(args, " "))
+		out, status := ExecCommand(selectedFlow.BastionName, bin, strings.Join(args, " "))
 		results[command] = out
 		fmt.Println(ColoredStatus(status))
 		s.Stop()
@@ -122,7 +123,7 @@ func SerialExecutor(selectedFlow Flow) {
 		WriteInFile(outFile, "Command: "+command)
 		WriteInFile(outFile, output)
 	}
-	fmt.Printf(ColoredStatus(15) + " Commands stdout/err stored in ~/.config/rodai/runs/%s", outFile)
+	fmt.Printf(ColoredStatus(15)+" Commands stdout/err stored in ~/.config/rodai/runs/%s", outFile)
 }
 
 func RunFlowCommandsParallel(flowChan <-chan ParallelFlowExec, results chan<- FlowCommandReturn) {
@@ -132,7 +133,7 @@ func RunFlowCommandsParallel(flowChan <-chan ParallelFlowExec, results chan<- Fl
 		values := strings.Split(flow.Command, " ")
 		bin := values[0]
 		args := values[1:]
-		out, status := ExecCommand(bin, strings.Join(args, " "))
+		out, status := ExecCommand(flow.Bastion, bin, strings.Join(args, " "))
 		execReturn := FlowCommandReturn{}
 		execReturn.Status = status
 		execReturn.Output = out
@@ -143,7 +144,29 @@ func RunFlowCommandsParallel(flowChan <-chan ParallelFlowExec, results chan<- Fl
 	}
 }
 
-func ExecCommand(command string, args ...string) (string, int) {
+func ExecCommand(bastionName, command string, args ...string) (string, int) {
+
+	if len(bastionName) > 0 {
+		bastion, err := GetBastionConfigDetails(bastionName)
+		CheckErr(err)
+		fullCommand := command + " " + strings.Join(args, " ")
+		cmd := exec.Command("ssh", "-i",
+			bastion.Key,
+			"-oStrictHostKeyChecking=no",
+			bastion.Host,
+			fullCommand,
+		)
+
+		output, _ := cmd.CombinedOutput()
+		switch cmd.ProcessState.ExitCode() {
+		case 0:
+			return string(output), 0
+		case 1:
+			return string(output), 1
+		default:
+			return string(output), 3012
+		}
+	}
 
 	cmd := exec.Command(command, args...)
 	output, _ := cmd.CombinedOutput()

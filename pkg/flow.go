@@ -11,10 +11,12 @@ import (
 )
 
 type Flow struct {
-	Name     string   `yaml:"Name"`
-	Parallel bool     `yaml:"Parallel"`
-	Serial   bool     `yaml:"Serial"`
-	Commands []string `yaml:"Commands"`
+	Name        string   `yaml:"Name"`
+	Parallel    bool     `yaml:"Parallel"`
+	Serial      bool     `yaml:"Serial"`
+	Commands    []string `yaml:"Commands"`
+	UseBastion  bool     `yaml:"UseBastion"`
+	BastionName string   `yaml:"BastionName"`
 }
 
 type Flows struct {
@@ -137,5 +139,6 @@ func CommitFlow(flows Flows) {
 	CheckErr(err)
 	defer file.Close()
 
-	file.WriteString(b.String())
+	_, err = file.WriteString(b.String())
+	CheckErr(err)
 }
