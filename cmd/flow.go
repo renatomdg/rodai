@@ -5,8 +5,6 @@ import (
 	"github.com/renatomdg/rodai/pkg"
 	"github.com/spf13/cobra"
 )
-// FlowAddParameters should be used as a struct to use validator to avoid bad behaviors :)
-
 
 var flowCmd = &cobra.Command{
 	Use:   "flow",
@@ -38,6 +36,7 @@ func init() {
 	flowAddCmd.Flags().StringP("name", "n", "", "Name of the command flow.")
 	flowAddCmd.Flags().StringArrayP("commands", "c", []string{}, "Commands to execute.")
 	flowAddCmd.Flags().BoolP("parallel", "p", false, "Set execution to be in parallel.")
+	flowAddCmd.Flags().Bool("store-results", false, "Store the stdout/err in a file")
 	flowAddCmd.Flags().BoolP("serial", "s", true, "Set execution to be serial.")
 	flowAddCmd.Flags().BoolP("use-bastion", "u", false, "Use a bastion to execute commands.")
 	flowAddCmd.Flags().StringP("bastion-name", "b", "", "Specify the bastion to run commands over.")
@@ -51,10 +50,12 @@ func init() {
 	flowUpdateCmd.Flags().StringP("name", "n", "", "New name of the command flow.")
 	flowUpdateCmd.Flags().StringArrayP("commands", "c", []string{}, "Commands to execute.")
 	flowUpdateCmd.Flags().BoolP("parallel", "p", false, "Set execution to be in parallel.")
+	flowUpdateCmd.Flags().Bool("store-results", false, "Store the stdout/err in a file")
 	flowUpdateCmd.Flags().BoolP("serial", "s", true, "Set execution to be serial.")
 	flowUpdateCmd.Flags().BoolP("use-bastion", "u", false, "Use a bastion to execute commands.")
 	flowUpdateCmd.Flags().StringP("bastion-name", "b", "", "Specify the bastion to run commands over.")
 	flowUpdateCmd.MarkFlagRequired("flow")
+	flowUpdateCmd.MarkFlagRequired("name")
 
 }
 
@@ -68,6 +69,7 @@ func flowAdd(cmd *cobra.Command, args []string) {
 	flow.Serial, _ = cmd.Flags().GetBool("serial")
 	flow.UseBastion, _ = cmd.Flags().GetBool("use-bastion")
 	flow.BastionName, _ = cmd.Flags().GetString("bastion-name")
+	flow.StoreResults, _ = cmd.Flags().GetBool("store-results")
 
 	result, code := pkg.AddFlow(flow)
 	fmt.Println(pkg.ColoredStatus(code), result)
@@ -83,6 +85,7 @@ func flowUpdate(cmd *cobra.Command, args []string) {
 	flow.Serial, _ = cmd.Flags().GetBool("serial")
 	flow.UseBastion, _ = cmd.Flags().GetBool("use-bastion")
 	flow.BastionName, _ = cmd.Flags().GetString("bastion-name")
+	flow.StoreResults, _ = cmd.Flags().GetBool("store-results")
 	toUpdate, _ := cmd.Flags().GetString("flow")
 
 	result, code := pkg.UpdateFlow(toUpdate, flow)

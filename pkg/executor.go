@@ -51,6 +51,7 @@ func Executor(cmd *cobra.Command, args []string) {
 	} else if selectedFlow.Serial {
 		SerialExecutor(selectedFlow)
 	}
+
 }
 
 func ParallelExecutor(selectedFlow Flow) {
@@ -92,12 +93,18 @@ func ParallelExecutor(selectedFlow Flow) {
 
 	outFile = GenerateFileName(selectedFlow.Name)
 	for command, output := range results {
-		WriteInFile(outFile, "Command: "+command)
-		WriteInFile(outFile, output)
+		if selectedFlow.StoreResults {
+			WriteInFile(outFile, "Command: "+command)
+			WriteInFile(outFile, output)
+		} else {
+			fmt.Println("Command: "+command)
+			fmt.Println(output)
+		}
 	}
 
-	fmt.Printf(ColoredStatus(15)+" Commands stdout/err stored in ~/.config/rodai/runs/%s", outFile)
-
+	if selectedFlow.StoreResults {
+		fmt.Printf(ColoredStatus(15)+" Commands stdout/err stored in ~/.config/rodai/runs/%s", outFile)
+	}
 }
 
 func SerialExecutor(selectedFlow Flow) {
@@ -120,10 +127,18 @@ func SerialExecutor(selectedFlow Flow) {
 
 	outFile = GenerateFileName(selectedFlow.Name)
 	for command, output := range results {
-		WriteInFile(outFile, "Command: "+command)
-		WriteInFile(outFile, output)
+		if selectedFlow.StoreResults {
+			WriteInFile(outFile, "Command: "+command)
+			WriteInFile(outFile, output)
+		} else {
+			fmt.Println("Command: "+command)
+			fmt.Println(output)
+		}
 	}
-	fmt.Printf(ColoredStatus(15)+" Commands stdout/err stored in ~/.config/rodai/runs/%s", outFile)
+
+	if selectedFlow.StoreResults {
+		fmt.Printf(ColoredStatus(15)+" Commands stdout/err stored in ~/.config/rodai/runs/%s", outFile)
+	}
 }
 
 func RunFlowCommandsParallel(flowChan <-chan ParallelFlowExec, results chan<- FlowCommandReturn) {

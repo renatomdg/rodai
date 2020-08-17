@@ -11,12 +11,13 @@ import (
 )
 
 type Flow struct {
-	Name        string   `yaml:"Name"`
-	Parallel    bool     `yaml:"Parallel"`
-	Serial      bool     `yaml:"Serial"`
-	Commands    []string `yaml:"Commands"`
-	UseBastion  bool     `yaml:"UseBastion"`
-	BastionName string   `yaml:"BastionName"`
+	Name         string   `yaml:"Name"`
+	Parallel     bool     `yaml:"Parallel"`
+	Serial       bool     `yaml:"Serial"`
+	Commands     []string `yaml:"Commands"`
+	UseBastion   bool     `yaml:"UseBastion"`
+	StoreResults bool     `yaml:"StoreResults"`
+	BastionName  string   `yaml:"BastionName"`
 }
 
 type Flows struct {
@@ -61,6 +62,11 @@ func UpdateFlow(flowName string, toUpdate Flow) (string, int) {
 			flow.Name = toUpdate.Name
 			flow.Commands = toUpdate.Commands
 			flow.Serial = toUpdate.Serial
+			if toUpdate.Serial && toUpdate.Parallel {
+				flow.Serial = false
+				flow.Parallel = true
+			}
+			flow.StoreResults = toUpdate.StoreResults
 			flow.Parallel = toUpdate.Parallel
 			AddFlow(flow)
 			return fmt.Sprintf("Update flow %s (now %s)", flowName, toUpdate.Name), 0
