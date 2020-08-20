@@ -119,7 +119,7 @@ func SerialExecutor(selectedFlow Flow) {
 		s.Suffix = fmt.Sprintf(" Running command: %s", command)
 		s.Color("cyan")
 		s.Start()
-		out, status := ExecCommand(selectedFlow.BastionName, bin, strings.Join(args, " "))
+		out, status := ExecCommand(selectedFlow.BastionName, bin, args)
 		results[command] = out
 		fmt.Println(ColoredStatus(status))
 		s.Stop()
@@ -148,7 +148,7 @@ func RunFlowCommandsParallel(flowChan <-chan ParallelFlowExec, results chan<- Fl
 		values := strings.Split(flow.Command, " ")
 		bin := values[0]
 		args := values[1:]
-		out, status := ExecCommand(flow.Bastion, bin, strings.Join(args, " "))
+		out, status := ExecCommand(flow.Bastion, bin, args)
 		execReturn := FlowCommandReturn{}
 		execReturn.Status = status
 		execReturn.Output = out
@@ -159,7 +159,7 @@ func RunFlowCommandsParallel(flowChan <-chan ParallelFlowExec, results chan<- Fl
 	}
 }
 
-func ExecCommand(bastionName, command string, args ...string) (string, int) {
+func ExecCommand(bastionName, command string, args []string) (string, int) {
 
 	if len(bastionName) > 0 {
 		bastion, err := GetBastionConfigDetails(bastionName)
